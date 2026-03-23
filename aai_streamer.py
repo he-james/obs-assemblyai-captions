@@ -1,3 +1,13 @@
+"""
+aai-streamer: OBS Studio script for live captions via AssemblyAI.
+
+See README.md for setup instructions.
+
+Architecture:
+  Background thread:  Microphone → AssemblyAI v3 WebSocket → CaptionState
+  OBS timer (100ms):  CaptionState.get() → format → update Text source
+"""
+
 import os
 import sys
 import glob
