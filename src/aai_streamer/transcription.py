@@ -86,6 +86,8 @@ class TranscriptionEngine:
             params_kwargs["vad_threshold"] = self._tx_config.vad_threshold
         if self._tx_config.filter_profanity:
             params_kwargs["filter_profanity"] = True
+        if self._tx_config.domain:
+            params_kwargs["domain"] = self._tx_config.domain
 
         params = StreamingParameters(**params_kwargs)
 

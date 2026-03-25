@@ -83,6 +83,7 @@ _min_turn_silence: int = 0  # 0 = server default (ms)
 _max_turn_silence: int = 0  # 0 = server default (ms)
 _vad_threshold: float = 0.0  # 0 = server default
 _filter_profanity: bool = False
+_medical_mode: bool = False
 
 # Positioning
 _center_horizontal: bool = False
@@ -118,6 +119,7 @@ def script_defaults(settings):
     obs.obs_data_set_default_int(settings, "max_turn_silence", 0)
     obs.obs_data_set_default_double(settings, "vad_threshold", 0.0)
     obs.obs_data_set_default_bool(settings, "filter_profanity", False)
+    obs.obs_data_set_default_bool(settings, "medical_mode", False)
     # Positioning
     obs.obs_data_set_default_bool(settings, "center_horizontal", False)
     obs.obs_data_set_default_bool(settings, "center_vertical", False)
@@ -241,6 +243,14 @@ def script_properties():
 
     obs.obs_properties_add_bool(adv, "filter_profanity", "Filter Profanity")
 
+    obs.obs_properties_add_bool(adv, "medical_mode", "Medical Mode")
+    obs.obs_properties_add_text(
+        adv, "_medical_help",
+        "Improve accuracy for medical terms (medications, procedures, conditions). "
+        "Supported languages: en, es, de, fr.",
+        obs.OBS_TEXT_INFO,
+    )
+
     obs.obs_properties_add_group(
         props, "advanced", "Advanced Settings",
         obs.OBS_GROUP_NORMAL, adv,
@@ -254,7 +264,7 @@ def script_update(settings):
     global _speech_model, _max_lines, _chars_per_line, _max_words
     global _fade_out_seconds, _formatter
     global _end_of_turn_confidence, _min_turn_silence, _max_turn_silence
-    global _vad_threshold, _filter_profanity
+    global _vad_threshold, _filter_profanity, _medical_mode
     global _center_horizontal, _center_vertical
 
     _api_key = obs.obs_data_get_string(settings, "api_key") or api_key_from_env()
@@ -274,6 +284,7 @@ def script_update(settings):
     _max_turn_silence = obs.obs_data_get_int(settings, "max_turn_silence")
     _vad_threshold = obs.obs_data_get_double(settings, "vad_threshold")
     _filter_profanity = obs.obs_data_get_bool(settings, "filter_profanity")
+    _medical_mode = obs.obs_data_get_bool(settings, "medical_mode")
 
     # Positioning
     _center_horizontal = obs.obs_data_get_bool(settings, "center_horizontal")
@@ -337,6 +348,7 @@ def _start_engine():
         max_turn_silence=_max_turn_silence or None,
         vad_threshold=_vad_threshold or None,
         filter_profanity=_filter_profanity,
+        domain="medical-v1" if _medical_mode else None,
     )
     audio_config = AudioConfig(device=_mic_device)
 

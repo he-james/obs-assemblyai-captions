@@ -26,6 +26,7 @@ class TranscriptionConfig:
     max_turn_silence: Optional[int] = None  # ms
     vad_threshold: Optional[float] = None
     filter_profanity: bool = False
+    domain: Optional[str] = None  # "medical-v1" for Medical Mode
 
 
 @dataclass
