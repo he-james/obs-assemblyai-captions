@@ -12,11 +12,12 @@ from src.aai_streamer.config import CaptionConfig
 class CaptionFormatter:
     """Converts CaptionSnapshots into display text for an OBS Text source.
 
-    During partials (end_of_turn=False): builds display text from the words
-    array so each word appears the instant it's recognized.
+    During partials (turn_is_formatted=False): builds display text from the
+    words array so each word appears the instant it's recognized.
 
-    When a turn finalizes (end_of_turn=True): swaps to the formatted transcript
-    and holds it on screen for the configured hold duration.
+    When a formatted turn arrives (turn_is_formatted=True): swaps to the
+    formatted transcript and holds it on screen for the configured hold
+    duration.
 
     Between turns: keeps showing the last text until the next turn's first
     word arrives, so there's never a blank flash.
@@ -36,8 +37,8 @@ class CaptionFormatter:
         if snapshot.is_empty:
             return self._last_text
 
-        # New partial arrived — a turn is actively being spoken
-        if not snapshot.end_of_turn:
+        # Partial (unformatted) — show live word-by-word text
+        if not snapshot.turn_is_formatted:
             self._turn_end_time = None
             self._last_turn_order = snapshot.turn_order
 
@@ -45,7 +46,7 @@ class CaptionFormatter:
             self._last_text = text
             return text
 
-        # Turn just finalized — show the formatted transcript and start hold timer
+        # Formatted turn arrived — show the formatted transcript and start hold timer
         if snapshot.turn_order != self._last_turn_order:
             self._turn_end_time = now
             self._last_turn_order = snapshot.turn_order

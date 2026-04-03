@@ -131,8 +131,9 @@ class TranscriptionEngine:
         ]
 
         log.info(
-            "Turn %d (final=%s, %d words): %s",
+            "Turn %d (formatted=%s, end=%s, %d words): %s",
             event.turn_order,
+            event.turn_is_formatted,
             event.end_of_turn,
             len(words),
             event.transcript[:80],
@@ -142,6 +143,7 @@ class TranscriptionEngine:
             self._caption_state.update(
                 transcript=event.transcript,
                 words=words,
+                turn_is_formatted=event.turn_is_formatted,
                 end_of_turn=event.end_of_turn,
                 turn_order=event.turn_order,
             )

@@ -22,6 +22,7 @@ class CaptionSnapshot:
 
     transcript: str = ""
     words: tuple[WordInfo, ...] = ()
+    turn_is_formatted: bool = False
     end_of_turn: bool = False
     turn_order: int = 0
     timestamp: float = 0.0
@@ -46,12 +47,14 @@ class CaptionState:
         self,
         transcript: str,
         words: list[WordInfo],
+        turn_is_formatted: bool,
         end_of_turn: bool,
         turn_order: int,
     ) -> None:
         snap = CaptionSnapshot(
             transcript=transcript,
             words=tuple(words),
+            turn_is_formatted=turn_is_formatted,
             end_of_turn=end_of_turn,
             turn_order=turn_order,
             timestamp=time.monotonic(),

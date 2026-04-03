@@ -381,7 +381,7 @@ def _stop_engine():
 # Timer callback — runs on OBS main thread, updates the Text source
 # ---------------------------------------------------------------------------
 
-_last_debug_turn = (-1, False, 0)  # (turn_order, end_of_turn, word_count)
+_last_debug_turn = (-1, False, 0)  # (turn_order, turn_is_formatted, word_count)
 _tick_count = 0
 
 def _update_text_source():
@@ -398,10 +398,10 @@ def _update_text_source():
         print(f"[aai] heartbeat tick={_tick_count} empty={snapshot.is_empty}")
 
     # Log every new snapshot (different turn, finality, or word count)
-    snap_key = (snapshot.turn_order, snapshot.end_of_turn, len(snapshot.words))
+    snap_key = (snapshot.turn_order, snapshot.turn_is_formatted, len(snapshot.words))
     if not snapshot.is_empty and snap_key != _last_debug_turn:
         _last_debug_turn = snap_key
-        print(f"[aai] turn={snapshot.turn_order} final={snapshot.end_of_turn} "
+        print(f"[aai] turn={snapshot.turn_order} formatted={snapshot.turn_is_formatted} "
               f"words={len(snapshot.words)} text={snapshot.transcript[:60]}")
 
     text = _formatter.format(snapshot)
