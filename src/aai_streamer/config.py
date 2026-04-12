@@ -36,6 +36,7 @@ class CaptionConfig:
     fade_out_seconds: float = 4.0
     max_lines: int = 2
     chars_per_line: int = 40
+    show_previous_final: bool = False
 
 
 def api_key_from_env() -> str:

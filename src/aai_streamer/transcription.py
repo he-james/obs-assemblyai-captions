@@ -68,7 +68,10 @@ class TranscriptionEngine:
         self._client.on(StreamingEvents.Begin, self._on_begin)
         self._client.on(StreamingEvents.Termination, self._on_termination)
 
-        speech_model = SpeechModel(self._tx_config.speech_model)
+        try:
+            speech_model = SpeechModel(self._tx_config.speech_model)
+        except ValueError:
+            speech_model = self._tx_config.speech_model
 
         # Build params, only including advanced options that are set
         params_kwargs = dict(

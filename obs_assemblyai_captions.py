@@ -76,6 +76,7 @@ _max_lines: int = 2
 _chars_per_line: int = 40
 _max_words: int = 5
 _fade_out_seconds: float = 4.0
+_show_previous_final: bool = False
 
 # Advanced WebSocket settings
 _end_of_turn_confidence: float = 0.0  # 0 = server default
@@ -113,6 +114,7 @@ def script_defaults(settings):
     obs.obs_data_set_default_int(settings, "chars_per_line", 40)
     obs.obs_data_set_default_int(settings, "max_words", 5)
     obs.obs_data_set_default_double(settings, "fade_out_seconds", 4.0)
+    obs.obs_data_set_default_bool(settings, "show_previous_final", False)
     # Advanced
     obs.obs_data_set_default_double(settings, "end_of_turn_confidence", 0.0)
     obs.obs_data_set_default_int(settings, "min_turn_silence", 0)
@@ -179,12 +181,13 @@ def script_properties():
     obs.obs_property_list_add_string(model_list, "Multilingual Streaming (more frequent partials)", "universal-streaming-multilingual")
 
     # Caption display settings
-    obs.obs_properties_add_int(props, "max_lines", "Max Lines (subtitle)", 1, 5, 1)
+    obs.obs_properties_add_int(props, "max_lines", "Max Lines (subtitle)", 1, 10, 1)
     obs.obs_properties_add_int(props, "chars_per_line", "Chars per Line (subtitle)", 20, 80, 5)
     obs.obs_properties_add_int(props, "max_words", "Visible Words (wordpop)", 1, 10, 1)
     obs.obs_properties_add_float_slider(
         props, "fade_out_seconds", "Display Hold Time (s)", 1.0, 15.0, 0.5,
     )
+    obs.obs_properties_add_bool(props, "show_previous_final", "Show Previous Final")
 
     # Positioning
     obs.obs_properties_add_bool(props, "center_horizontal", "Center Horizontally")
@@ -262,7 +265,7 @@ def script_properties():
 def script_update(settings):
     global _api_key, _mic_device, _text_source_name, _caption_mode
     global _speech_model, _max_lines, _chars_per_line, _max_words
-    global _fade_out_seconds, _formatter
+    global _fade_out_seconds, _show_previous_final, _formatter
     global _end_of_turn_confidence, _min_turn_silence, _max_turn_silence
     global _vad_threshold, _filter_profanity, _medical_mode
     global _center_horizontal, _center_vertical
@@ -277,6 +280,7 @@ def script_update(settings):
     _chars_per_line = obs.obs_data_get_int(settings, "chars_per_line")
     _max_words = obs.obs_data_get_int(settings, "max_words")
     _fade_out_seconds = obs.obs_data_get_double(settings, "fade_out_seconds")
+    _show_previous_final = obs.obs_data_get_bool(settings, "show_previous_final")
 
     # Advanced
     _end_of_turn_confidence = obs.obs_data_get_double(settings, "end_of_turn_confidence")
@@ -296,6 +300,7 @@ def script_update(settings):
         fade_out_seconds=_fade_out_seconds,
         max_lines=_max_lines,
         chars_per_line=_chars_per_line,
+        show_previous_final=_show_previous_final,
     ))
 
 
