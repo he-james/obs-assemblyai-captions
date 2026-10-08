@@ -5,17 +5,17 @@ from __future__ import annotations
 import time
 import textwrap
 
-from src.aai_streamer.caption_state import CaptionSnapshot
-from src.aai_streamer.config import CaptionConfig
+from .caption_state import CaptionSnapshot
+from .config import CaptionConfig
 
 
 class CaptionFormatter:
     """Converts CaptionSnapshots into display text for an OBS Text source.
 
-    During partials (turn_is_formatted=False): builds display text from the
-    words array so each word appears the instant it's recognized.
+    During partials: builds display text from the words array so each word
+    appears the instant it's recognized.
 
-    When a formatted turn arrives (turn_is_formatted=True): swaps to the
+    When a turn is final (end_of_turn and turn_is_formatted): swaps to the
     formatted transcript and holds it on screen for the configured hold
     duration.
 
@@ -26,6 +26,7 @@ class CaptionFormatter:
     def __init__(self, config: CaptionConfig):
         self._config = config
         self._last_turn_order = -1
+        self._final_turn_order = -1  # turn whose final text is being held
         self._turn_end_time: float | None = None
         self._last_text: str = ""  # persists between turns to avoid blanks
         self._previous_final: str = ""  # previous turn's final text
@@ -40,8 +41,8 @@ class CaptionFormatter:
         if snapshot.is_empty:
             return self._last_text
 
-        # Partial (unformatted) — show live word-by-word text
-        if not snapshot.turn_is_formatted:
+        # Partial — show live word-by-word text
+        if not snapshot.is_final:
             # New turn started — save the last final as previous
             if snapshot.turn_order != self._last_turn_order:
                 self._save_previous_final(now)
@@ -53,11 +54,14 @@ class CaptionFormatter:
             self._last_text = text
             return text
 
-        # Formatted turn arrived — show the formatted transcript and start hold timer
-        if snapshot.turn_order != self._last_turn_order:
-            self._save_previous_final(now)
+        # Final turn arrived — show the formatted transcript and start hold timer
+        if snapshot.turn_order != self._final_turn_order:
+            # Final with no partials before it — it starts a new turn too
+            if snapshot.turn_order != self._last_turn_order:
+                self._save_previous_final(now)
+                self._last_turn_order = snapshot.turn_order
+            self._final_turn_order = snapshot.turn_order
             self._turn_end_time = now
-            self._last_turn_order = snapshot.turn_order
             # Remember this final so it can become the previous later
             self._current_final_text = self._format_final(snapshot)
 
@@ -82,9 +86,8 @@ class CaptionFormatter:
         """Promote the current final to previous final for display."""
         if not self._config.show_previous_final:
             return
-        current = getattr(self, "_current_final_text", "")
-        if current:
-            self._previous_final = current
+        if self._current_final_text:
+            self._previous_final = self._current_final_text
             self._previous_final_time = now
             self._current_final_text = ""
 
@@ -114,14 +117,21 @@ class CaptionFormatter:
         else:
             text = snapshot.transcript
 
-        return self._wrap(text)
+        return self._wrap(self._with_speaker(snapshot, text))
 
     def _format_final(self, snapshot: CaptionSnapshot) -> str:
         """Format the finalized transcript (punctuated/formatted by AAI)."""
         if self._config.mode == "wordpop":
             return self._format_wordpop(snapshot)
 
-        return self._wrap(snapshot.transcript)
+        return self._wrap(self._with_speaker(snapshot, snapshot.transcript))
+
+    def _with_speaker(self, snapshot: CaptionSnapshot, text: str) -> str:
+        """Prefix the speaker label (e.g. "A: ...") when diarization is shown."""
+        label = snapshot.speaker_label
+        if not self._config.show_speaker_labels or label in (None, "", "PENDING", "UNKNOWN"):
+            return text
+        return f"{label}: {text}"
 
     def _wrap(self, text: str) -> str:
         """Word-wrap text to configured max lines."""

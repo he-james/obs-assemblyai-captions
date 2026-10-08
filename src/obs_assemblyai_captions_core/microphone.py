@@ -9,7 +9,7 @@ from typing import Iterator
 import numpy as np
 import sounddevice as sd
 
-from src.aai_streamer.config import AudioConfig
+from .config import AudioConfig
 
 log = logging.getLogger(__name__)
 
